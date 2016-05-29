@@ -10,97 +10,97 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.utils import timezone
 
-from influxdb import InfluxDBClient
+# from influxdb import InfluxDBClient
 
 from coins.models import *
 
 
-def influxdb_test(request):
-    # date = datetime.datetime.now()
-    x = datetime.datetime.now(tz=pytz.utc)
-    #ok timestamp:
-    #2015-01-29T21:55:43.702900257Z
-    #2016-05-11 06:16:45.545327
-    #
+# def influxdb_test(request):
+#     # date = datetime.datetime.now()
+#     x = datetime.datetime.now(tz=pytz.utc)
+#     #ok timestamp:
+#     #2015-01-29T21:55:43.702900257Z
+#     #2016-05-11 06:16:45.545327
+#     #
+#
+#
+#     print(x)
+#     json_body = [
+#         {
+#             "measurement": "my_mesurment",
+#             "tags": {"region":"EMEA",},
+#             "time": "2016-04-21T19:28:07.580664347Z",
+#             "fields":
+#                 {
+#                     "turnover": "value=38000000",
+#                     "price": "value=100.4",
+#                 },
+#
+#         }
+#     ]
+#     ts = 1483617600
+#     utc_ts = datetime.datetime.fromtimestamp(ts)
+#     tz = datetime.datetime.now(tz=pytz.utc)
+#     conv = datetime.datetime.fromtimestamp(ts)
+#
+#     json_body2 = [
+#         {
+#             "measurement": "currency_state",
+#             "tags": {
+#                 "currency": "TTT",
+#                 "market": "mid"
+#             },
+#             "time": str(utc_ts),
+#             # "time": "1459198938163208459
+#             "fields": {
+#                 "value": 460.12
+#             }
+#         }
+#     ]
+#
+#     client = InfluxDBClient('localhost', 8086, 'root', 'root', 'example')
+#
+#     # client.create_database('example')
+#
+#     client.write_points(json_body2)
+#     result2 = client.query('SHOW MEASUREMENTS;')
+#     print(result2)
+#     result = client.query('select value from currency_state;')
+#     print(result)
+#     #print("Result: {0}".format(result))
+#
+#     print(client.query('''select value from currency_state WHERE currency='TTT';'''))
+#
+#     return HttpResponse('11111')
 
 
-    print(x)
-    json_body = [
-        {
-            "measurement": "my_mesurment",
-            "tags": {"region":"EMEA",},
-            "time": "2016-04-21T19:28:07.580664347Z",
-            "fields":
-                {
-                    "turnover": "value=38000000",
-                    "price": "value=100.4",
-                },
-
-        }
-    ]
-    ts = 1483617600
-    utc_ts = datetime.datetime.fromtimestamp(ts)
-    tz = datetime.datetime.now(tz=pytz.utc)
-    conv = datetime.datetime.fromtimestamp(ts)
-
-    json_body2 = [
-        {
-            "measurement": "currency_state",
-            "tags": {
-                "currency": "TTT",
-                "market": "mid"
-            },
-            "time": str(utc_ts),
-            # "time": "1459198938163208459
-            "fields": {
-                "value": 460.12
-            }
-        }
-    ]
-
-    client = InfluxDBClient('localhost', 8086, 'root', 'root', 'example')
-
-    # client.create_database('example')
-
-    client.write_points(json_body2)
-    result2 = client.query('SHOW MEASUREMENTS;')
-    print(result2)
-    result = client.query('select value from currency_state;')
-    print(result)
-    #print("Result: {0}".format(result))
-
-    print(client.query('''select value from currency_state WHERE currency='TTT';'''))
-
-    return HttpResponse('11111')
+# import pandas
+# def utc_test(request):
+#     now = datetime.datetime.now()
+#     x = datetime.datetime.now(tz=pytz.utc)
+#     utc_dt = datetime.datetime.utcnow()
+#     print(utc_dt, utc_dt.isoformat())
+#     tz = datetime.datetime.now(tz=pytz.utc)
+#     print(tz)
+#     ts = 1483617600#1460463185#'1460463185' #'1460463279'
+#     conv = datetime.datetime.fromtimestamp(ts)
+#     print('conv ', conv)
+#
+#     print('pandas - ', pandas.to_datetime(ts))
+#     return HttpResponse(str(utc_dt)+"| _______ |"+str(tz))
 
 
-import pandas
-def utc_test(request):
-    now = datetime.datetime.now()
-    x = datetime.datetime.now(tz=pytz.utc)
-    utc_dt = datetime.datetime.utcnow()
-    print(utc_dt, utc_dt.isoformat())
-    tz = datetime.datetime.now(tz=pytz.utc)
-    print(tz)
-    ts = 1483617600#1460463185#'1460463185' #'1460463279'
-    conv = datetime.datetime.fromtimestamp(ts)
-    print('conv ', conv)
-
-    print('pandas - ', pandas.to_datetime(ts))
-    return HttpResponse(str(utc_dt)+"| _______ |"+str(tz))
-
-
-def query_test(request):
-
-    client = InfluxDBClient('localhost', 8086, 'root', 'root', 'example')
-    result = client.query('select value from currency_state;')
-    print(result)
-    print(client.query('''select value from currency_state WHERE currency='TTT';'''))
-    print(client.query('''select value from currency_state WHERE TIME ='2016-04-12T12:13:05Z';'''))
-    print(client.query('''select value from currency_state WHERE time > now() - 100d;'''))
-
-
-    return HttpResponse('3333')
+# def query_test(request):
+#
+#     client = InfluxDBClient('localhost', 8086, 'root', 'root', 'example')
+#     result = client.query('select value from currency_state;')
+#     print(result)
+#     print(client.query('''select value from currency_state WHERE currency='TTT';'''))
+#     print(client.query('''select value from currency_state WHERE TIME ='2016-04-12T12:13:05Z';'''))
+#     print(client.query('''select value from currency_state WHERE time > now() - 100d;'''))
+#
+#
+#     return HttpResponse('3333')
 
 
 def fetch_cryptocompare(e_, fsym, tsym, limit, toTs):
@@ -130,8 +130,6 @@ def histo_m(request):
     # response2 = + 5 * 60 * 60
 
     fetch_cryptocompare(e_='CCCAGG', fsym='BTC', tsym='USD', limit=3, toTs='1456833600')
-
-
 
     clist = response.read().decode('utf-8')
     clist = json.loads(clist)['Data']
