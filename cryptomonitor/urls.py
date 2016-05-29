@@ -21,9 +21,9 @@ from coins import views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
-    url(r'^api/influxdb_test/$', views.influxdb_test, name='influxdb_test'),
-    url(r'^api/utc_test/$', views.utc_test, name='utc_test'),
-    url(r'^api/query_test/$', views.query_test, name='query_test'),
+    # url(r'^api/influxdb_test/$', views.influxdb_test, name='influxdb_test'),
+    # url(r'^api/utc_test/$', views.utc_test, name='utc_test'),
+    # url(r'^api/query_test/$', views.query_test, name='query_test'),
 
     url(r'^api/histo_m/$', views.histo_m, name='histo_m'),
 
