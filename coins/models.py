@@ -36,8 +36,6 @@ class Asat(models.Model):
 
     def get_dict(self):
         d = {}
-        # d['id'] = self.pk
-        # d['curr'] = self.curr.symbol
         d['date'] = date_formatted(self.date)
         d['ts'] = str(self.ts)
         d['open'] = str(self.open)
@@ -52,7 +50,6 @@ class Asat(models.Model):
 class Point(models.Model):
     curr = models.ForeignKey(Curr)
     date = models.DateTimeField(null=True, blank=True)
-    ts = models.IntegerField() #timestamp
     price_usd = models.FloatField()
     volume24_usd = models.FloatField()
 
@@ -66,9 +63,18 @@ class Parameters(models.Model):
     turnover24_period = models.IntegerField()
     turnover24_percentage = models.FloatField()
     curr = models.OneToOneField(Curr, null=True, blank=True)
+    isdefault = models.BooleanField(default=False)
     # TODO only one can be without curr - default. add a check to the save method
 
     def __str__(self):
-        return str(self.price_period)
-        # TODO if curr - return symbol, if not - 'current'
+        try:
+            string = self.curr.symbol
+        except:
+            string = 'default'
+        return string
 
+
+class EntryParametrs(models.Model):
+    percent_change_1h = models.FloatField(null=True, blank=True)
+    percent_change_24h = models.FloatField(null=True, blank=True)
+    percent_change_7d = models.FloatField(null=True, blank=True)

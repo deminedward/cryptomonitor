@@ -21,6 +21,8 @@ class AsatAdmin(admin.ModelAdmin):
 
 
 class PointAdmin(admin.ModelAdmin):
+    list_display = ('curr', 'date', 'price_usd', 'volume24_usd')
+    list_filter = ('curr',)
     pass
 
 
@@ -28,7 +30,13 @@ class ParametersAdmin(admin.ModelAdmin):
     pass
 
 
+class EntryParametrsAdmin(admin.ModelAdmin):
+    pass
+
+
+
 admin.site.register(Curr, CurrAdmin)
 admin.site.register(Asat, AsatAdmin)
 admin.site.register(Point, PointAdmin)
 admin.site.register(Parameters, ParametersAdmin)
+admin.site.register(EntryParametrs, EntryParametrsAdmin)

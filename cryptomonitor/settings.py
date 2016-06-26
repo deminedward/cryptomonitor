@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'coins',
+    'django_crontab',
+
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -49,6 +51,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'coins.cron.MyCronJob',
 ]
 
 ROOT_URLCONF = 'cryptomonitor.urls'
@@ -116,9 +119,9 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -135,6 +138,10 @@ MEDIA_URL = '/media/'
 #     os.path.join(BASE_DIR, 'static'),
 # )
 
+
+CRONJOBS = [
+    ('*/5 * * * *', 'coins.views.fetch_n_save'),
+]
 
 try:
     from .settings_local import *

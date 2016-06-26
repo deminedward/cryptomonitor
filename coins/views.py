@@ -1,187 +1,18 @@
 # -*- coding: utf-8 -*-
 import datetime
-import pytz
 import urllib
+from urllib.error import URLError, HTTPError
 import json
 import time
 import csv
+import telepot
 
-from django.shortcuts import render
+
 from django.http import HttpResponse
 from django.utils import timezone
-
-# from influxdb import InfluxDBClient
+from django.core.exceptions import ObjectDoesNotExist
 
 from coins.models import *
-
-
-# def influxdb_test(request):
-#     # date = datetime.datetime.now()
-#     x = datetime.datetime.now(tz=pytz.utc)
-#     #ok timestamp:
-#     #2015-01-29T21:55:43.702900257Z
-#     #2016-05-11 06:16:45.545327
-#     #
-#
-#
-#     print(x)
-#     json_body = [
-#         {
-#             "measurement": "my_mesurment",
-#             "tags": {"region":"EMEA",},
-#             "time": "2016-04-21T19:28:07.580664347Z",
-#             "fields":
-#                 {
-#                     "turnover": "value=38000000",
-#                     "price": "value=100.4",
-#                 },
-#
-#         }
-#     ]
-#     ts = 1483617600
-#     utc_ts = datetime.datetime.fromtimestamp(ts)
-#     tz = datetime.datetime.now(tz=pytz.utc)
-#     conv = datetime.datetime.fromtimestamp(ts)
-#
-#     json_body2 = [
-#         {
-#             "measurement": "currency_state",
-#             "tags": {
-#                 "currency": "TTT",
-#                 "market": "mid"
-#             },
-#             "time": str(utc_ts),
-#             # "time": "1459198938163208459
-#             "fields": {
-#                 "value": 460.12
-#             }
-#         }
-#     ]
-#
-#     client = InfluxDBClient('localhost', 8086, 'root', 'root', 'example')
-#
-#     # client.create_database('example')
-#
-#     client.write_points(json_body2)
-#     result2 = client.query('SHOW MEASUREMENTS;')
-#     print(result2)
-#     result = client.query('select value from currency_state;')
-#     print(result)
-#     #print("Result: {0}".format(result))
-#
-#     print(client.query('''select value from currency_state WHERE currency='TTT';'''))
-#
-#     return HttpResponse('11111')
-
-
-# import pandas
-# def utc_test(request):
-#     now = datetime.datetime.now()
-#     x = datetime.datetime.now(tz=pytz.utc)
-#     utc_dt = datetime.datetime.utcnow()
-#     print(utc_dt, utc_dt.isoformat())
-#     tz = datetime.datetime.now(tz=pytz.utc)
-#     print(tz)
-#     ts = 1483617600#1460463185#'1460463185' #'1460463279'
-#     conv = datetime.datetime.fromtimestamp(ts)
-#     print('conv ', conv)
-#
-#     print('pandas - ', pandas.to_datetime(ts))
-#     return HttpResponse(str(utc_dt)+"| _______ |"+str(tz))
-
-
-# def query_test(request):
-#
-#     client = InfluxDBClient('localhost', 8086, 'root', 'root', 'example')
-#     result = client.query('select value from currency_state;')
-#     print(result)
-#     print(client.query('''select value from currency_state WHERE currency='TTT';'''))
-#     print(client.query('''select value from currency_state WHERE TIME ='2016-04-12T12:13:05Z';'''))
-#     print(client.query('''select value from currency_state WHERE time > now() - 100d;'''))
-#
-#
-#     return HttpResponse('3333')
-
-
-def fetch_cryptocompare(e_, fsym, tsym, limit, toTs):
-    url = 'https://www.cryptocompare.com/api/data/histohour/?'+ \
-        'e=' + e_ + \
-        '&fsym=' + fsym + \
-        '&tsym=' + tsym + \
-        '&limit=' + str(limit) + \
-        '&toTs=' + str(toTs)
-
-    response = urllib.request.urlopen(url)
-    responce_read = response.read().decode('utf-8')
-    responce_loaded = json.loads(responce_read)['Data']
-
-    return (responce_loaded)
-
-
-def histo_m(request):
-    response = urllib.request.urlopen('https://www.cryptocompare.com/api/data/histohour/'
-                                      '?e=CCCAGG&'
-                                      'fsym=BTC&'
-                                      'limit=3&'
-                                      'tsym=USD&'
-                                      'toTs=1456833600')
-
-    #https://www.cryptocompare.com/api/data/histominute/?e=CCCAGG&fsym=BTC&limit=10&tsym=USD&aggregate=2
-    # response2 = + 5 * 60 * 60
-
-    fetch_cryptocompare(e_='CCCAGG', fsym='BTC', tsym='USD', limit=3, toTs='1456833600')
-
-    clist = response.read().decode('utf-8')
-    clist = json.loads(clist)['Data']
-    for i in clist:
-        print(i)
-
-    print(clist)
-    return HttpResponse(clist)
-
-
-def fetcher_hourly(request):
-    start_ts = 1463540400
-    step_source = 1000
-    curr_symb = 'CRAIG'
-    iter = 0
-    stop_iter = 0
-    count_hours = 0
-    curr = Curr.objects.get(symbol=curr_symb)
-
-    while (iter < 25) & (stop_iter < 6):
-        print('iter before: ', iter, ' stop iter: ', stop_iter, ' hours: ', count_hours, datetime.datetime.now())
-        bunch = fetch_cryptocompare(e_='CCCAGG', fsym=curr_symb, tsym='USD', limit=step_source, toTs=start_ts)
-        dt = datetime.datetime.fromtimestamp(start_ts)
-        start_ts -= (step_source + 1) * 60 * 60
-        if bunch:
-            for i in bunch:
-                if not Asat.objects.filter(ts=i['time'], curr=curr):
-                    asat = Asat()
-                    asat.curr = curr
-                    asat.date = datetime.datetime.fromtimestamp(i['time'])
-                    asat.ts = i['time']
-                    asat.open = i['open']
-                    asat.high = i['high']
-                    asat.low = i['low']
-                    asat.close = i['close']
-                    asat.volumefrom = i['volumefrom']
-                    asat.volumeto = i['volumeto']
-                    asat.when = timezone.now()
-                    asat.save()
-                    count_hours += 1
-
-            iter += 1
-            time.sleep(5)
-        else:
-            stop_iter += 1
-
-    return HttpResponse('bunch')
-
-
-
-# def export_leads(request):
-#     return excel.make_response_from_a_table(Student, 'xlsx')
 
 
 def get_model_fields(model):
@@ -210,88 +41,169 @@ def write_csv(request):
     return HttpResponse('try')
 
 
-from django.db.models import Func, F
 
-def fetch_online(request, sec):
-    price_period = int(sec)
-    price_percentage = 0.0006
-    print('period: ', price_period, 'percentage: ', price_percentage)
+from cryptomonitor.information import TelegramBotKey, TelegramChannel
 
-    curr = Curr.objects.filter(symbol='BTC')
-    try:
-        parameters = Parameters.objects.get(curr=curr)
-    except:
-        parameters = Parameters.objects.filter(curr__isnull=True)[0]
-
-    print('parameters obj: ', parameters, parameters.curr)
-
-    last_= Asat.objects.filter(curr=curr).order_by('date').last()
-    #it will be a date of real-time data
-    last_date = last_.date
-
-    real_priceperiod = last_date-datetime.timedelta(0, price_period)
-    print(last_date-datetime.timedelta(0, price_period))
-
-    closest_lt = Asat.objects.filter(curr=curr).filter(date__lt=real_priceperiod).order_by("-date")[0]
-    print(closest_lt)
-
-    fair_diff = (last_date - closest_lt.date)
-    print('fair_diff.seconds  ', fair_diff.seconds)
-    coeff = fair_diff.seconds/price_period
-    print(coeff)
-    change = (last_.high - closest_lt.high)/closest_lt.high
-
-    if change > price_percentage/coeff:
-        print('ALARM!  ', 'change ', change, 'dynamic/coeff: ', price_percentage*coeff)
-
-    print(change)
-
-    # closest = Asat.objects.annotate(abs_diff=Func(F('date') - depth, function='ABS')).order_by('abs_diff').first()
-    # closest = Asat.objects.filter(date__lt=last_date)#[0]
-    # print(closest)
-
-    return HttpResponse('fetch_online')
+def telegram_bot(message):
+    bot = telepot.Bot(TelegramBotKey)
+    bot.sendMessage(TelegramChannel, message)
 
 
-def fetch_coinmarketcap(request):
+def my_scheduled_job():
+    bot = telepot.Bot(TelegramBotKey)
+    bot.sendMessage(TelegramChannel, 'People equal shit test')
+
+
+def fetch_coinmarketcap():
     url = 'https://api.coinmarketcap.com/v1/ticker/'
-    response = urllib.request.urlopen(url)
-    responce_read = response.read().decode('utf-8')
-    responce_loaded = json.loads(responce_read)
+    try:
+        response = urllib.request.urlopen(url)
+        responce_read = response.read().decode('utf-8')
+        responce_loaded = json.loads(responce_read)
+        response_dict = {item['symbol']: item for item in responce_loaded} #to iterate by Curr, not by response list
+        return response_dict
+    except HTTPError as e:
+        telegram_bot('HTTPError: fetch_coinmarketcap. Error code: ' + str(e.code))
+        return {}
+    except URLError as e:
+        telegram_bot('URLError: fetch_coinmarketcap. Reason: ' + str(e.reason))
+        return {}
 
-    for i in responce_loaded:
-        if i['rank'] <= 40:
+
+def check_equations(last_date):
+    for curr in Curr.objects.all():
+        if Point.objects.filter(curr=curr).count() > 5:
             try:
-                i_curr = Curr.objects.get(symbol=i['symbol'])
-                if i_curr.source_rate != int(i['rank']):
-                    i_curr.source_rate = int(i['rank'])
-                    i_curr.save()
-                    print('source_rate was changed') #TODO send to user
-            except Curr.DoesNotExist:
-                # new_curr = Curr(symbol=i['symbol'], name=i['name'], source_rate=i['rank'])
-                # new_curr.save()
-                print('DoesNotExist')
+                parameters = Parameters.objects.get(curr=curr)
+            except:
+                parameters = Parameters.objects.filter(isdefault=True).first()
+            # print(parameters, parameters.price_period)
+            price_period = parameters.price_period
+            price_percentage = parameters.price_percentage
+            turnover24_period = parameters.turnover24_period
+            turnover24_percentage = parameters.turnover24_percentage
+            try:
+                last_point = Point.objects.get(date=last_date)
+            except:
+                last_point = Point.objects.all().order_by('-date').first()
+            # PRICE CHECK:
+            desired_price_past_date = last_date - datetime.timedelta(0, price_period)
+            # print('desired_price_past_date : ', desired_price_past_date)
+            # print(Point.objects.filter(curr=curr).filter(date__gt=desired_price_past_date).order_by("date").first())
+            closest_price = \
+            Point.objects.filter(curr=curr).filter(date__lt=desired_price_past_date).order_by("-date").first()
+            if not closest_price:
+                closest_price = \
+                Point.objects.filter(curr=curr).filter(date__gt=desired_price_past_date).order_by("date").first()
+            # print('closest_price: ', closest_price)
+            actual_price_period = last_date - closest_price.date
+            # print('actual_price_period:  ', actual_price_period)
+            # print('last_date:  ', last_date)
+            correction_price = actual_price_period.seconds / price_period #поправка на разницу между желаемым периодом и реальным
+            # print('correction_price:  ', correction_price)
+            price_change = (last_point.price_usd - closest_price.price_usd) / closest_price.price_usd
+            if abs(price_change) > (price_percentage / correction_price):
+                reason = 'Price ALARM: ' + curr.symbol # TODO add some information
+                telegram_bot(reason)
+
+            # TURNOVER24 CHECK:
+            desired_turnover_past_date = last_date - datetime.timedelta(0, turnover24_period)
+            closest_turnover = \
+            Point.objects.filter(curr=curr).filter(date__lt=desired_turnover_past_date).order_by("-date").first()
+            if not closest_turnover:
+                closest_turnover = \
+                Point.objects.filter(curr=curr).filter(date__gt=desired_turnover_past_date).order_by("date").first()
+
+            actual_turnover_period = last_date - closest_turnover.date
+            correction_turnover = actual_turnover_period.seconds / turnover24_period #поправка на разницу между желаемым периодом и реальным
+            turnover_change = (last_point.volume24_usd - closest_turnover.volume24_usd) / closest_turnover.volume24_usd
+            if abs(turnover_change) > (turnover24_percentage / correction_turnover):
+                reason = 'Turnover ALARM: ' + curr.symbol  # TODO add some information
+                telegram_bot(reason)
+        else:
+            reason = 'No information for : ' + curr.symbol
+            #telegram_bot(reason)
+
+    return ('')
 
 
-    return HttpResponse('fetch_Сoinmarketcap')
+def check_other(response_dict):
+    try:
+        entry_params = EntryParametrs.objects.all().first()
+        try:
+            percent_change_1h = entry_params.percent_change_1h
+        except:
+            percent_change_1h = None
+        try:
+            percent_change_24h = entry_params.percent_change_24h
+        except:
+            percent_change_24h = None
+        try:
+            percent_change_7d = entry_params.percent_change_7d
+        except:
+            percent_change_7d = None
+
+        for i in response_dict:
+            if not Curr.objects.get(symbol=i):
+                reason = None
+                if percent_change_1h and i['percent_change_1h'] > percent_change_1h:
+                    reason = 'Currency ' + i + ' has added - percent_change_1h: ' + str(i['percent_change_1h'])
+                elif percent_change_24h and i['percent_change_24h'] > percent_change_24h:
+                    reason = 'Currency ' + i + ' has added - percent_change_24h:' + str(i['percent_change_24h'])
+                elif percent_change_7d and i['percent_change_7d'] > percent_change_7d:
+                    reason = 'Currency ' + i + ' has added - percent_change_7d:' + str(i['percent_change_7d'])
+                if reason:
+                    new = Curr(symbol=i['symbol'])
+                    new.name = i['name']
+                    new.source_rate = i['rank']
+                    new.save()
+                    telegram_bot(reason)
+    except:
+        pass
+
+    return ('')
 
 
-def compare(request):
-    url = 'https://www.cryptocompare.com/api/data/coinlist/'
-    response = urllib.request.urlopen(url)
-    responce_read = response.read().decode('utf-8')
-    responce_loaded = json.loads(responce_read)['Data']
-    # print(responce_loaded)
-    filename = 'cryptocompare_coinlist.csv'
-    # for i in responce_loaded:
-    #     print(i, responce_loaded[i])
+def fetch_n_save():
+    point_time = datetime.datetime.utcnow()
+    response_dict = fetch_coinmarketcap()
+    if response_dict: #if it void - error message has already sent
+        for curr in Curr.objects.all().order_by('source_rate'): #[:3]: TODO change to all
+            try:
+                point = Point(curr=curr, date=point_time)
+                point.price_usd = float(response_dict[curr.symbol]['price_usd'])
+                point.volume24_usd = float(response_dict[curr.symbol]['24h_volume_usd'])
+                point.save()
+            except:
+                # print('error with fetching currency: ', curr.symbol)
+                telegram_bot('error with fetching currency: ' + curr.symbol)#TODO send to telegram
 
-    with open(filename, 'w') as csvfile:
-        fieldnames = ['symbol', 'rate',]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for i in responce_loaded:
-            # print([getattr(obj, field) for field in field_names])
-            writer.writerow({'symbol': i, 'rate': responce_loaded[i]['SortOrder']})
+        check_equations(point_time)
+        check_other(response_dict)
 
-    return HttpResponse('compare')
+    else:
+        pass
+
+    # return HttpResponse('nothing')
+
+
+def initial_curr(request, initial_rank):
+    response_dict = fetch_coinmarketcap()
+    added = []
+    for i in response_dict:
+
+        if int(response_dict[i]['rank']) <= int(initial_rank):
+            try:
+                curr = Curr.objects.get(symbol=i)
+            except ObjectDoesNotExist:
+                new = Curr(symbol=response_dict[i]['symbol'])
+                new.name = response_dict[i]['name']
+                new.source_rate = int(response_dict[i]['rank'])
+                new.save()
+                added.append(new.symbol)
+    return HttpResponse(added)
+
+
+def test_separately(request):
+    fetch_n_save()
+    return HttpResponse('test_separately')
