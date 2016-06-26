@@ -17,36 +17,6 @@ def date_formatted(obj):
                          obj.strftime("%H:%M:%S"))
 
 
-#data fro the currency as at (timestamp)
-class Asat(models.Model):
-
-    curr = models.ForeignKey(Curr)
-    date = models.DateTimeField(null=True, blank=True)
-    ts = models.IntegerField() #time
-    open = models.FloatField()
-    high = models.FloatField()
-    low = models.FloatField()
-    close = models.FloatField()
-    volumefrom = models.FloatField()
-    volumeto = models.FloatField()
-    when = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return date_formatted(self.date)
-
-    def get_dict(self):
-        d = {}
-        d['date'] = date_formatted(self.date)
-        d['ts'] = str(self.ts)
-        d['open'] = str(self.open)
-        d['high'] = str(self.high)
-        d['low'] = str(self.low)
-        d['close'] = str(self.close)
-        d['volumefrom'] = str(self.volumefrom)
-        d['volumeto'] = str(self.volumeto)
-        return d
-
-
 class Point(models.Model):
     curr = models.ForeignKey(Curr)
     date = models.DateTimeField(null=True, blank=True)
