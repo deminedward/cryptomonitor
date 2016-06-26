@@ -105,7 +105,7 @@ def check_equations(last_date):
             price_change = (last_point.price_usd - closest_price.price_usd) / closest_price.price_usd
             if abs(price_change) > (price_percentage / correction_price):
                 reason = 'Price ALARM: ' + curr.symbol # TODO add some information
-                telegram_bot(reason)
+                # telegram_bot(reason)
 
             # TURNOVER24 CHECK:
             desired_turnover_past_date = last_date - datetime.timedelta(0, turnover24_period)
@@ -120,7 +120,7 @@ def check_equations(last_date):
             turnover_change = (last_point.volume24_usd - closest_turnover.volume24_usd) / closest_turnover.volume24_usd
             if abs(turnover_change) > (turnover24_percentage / correction_turnover):
                 reason = 'Turnover ALARM: ' + curr.symbol  # TODO add some information
-                telegram_bot(reason)
+                # telegram_bot(reason)
         else:
             reason = 'No information for : ' + curr.symbol
             #telegram_bot(reason)
