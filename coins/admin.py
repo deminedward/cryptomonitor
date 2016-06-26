@@ -15,9 +15,6 @@ date_formatted.short_description = u'Когда'
 date_formatted.admin_order_field = 'date'  # to sort by start_date, using that column
 
 
-class AsatAdmin(admin.ModelAdmin):
-    list_display = ('curr', date_formatted, 'open', 'close', 'volumefrom', 'volumeto')
-    list_filter = ('curr',)
 
 
 class PointAdmin(admin.ModelAdmin):
@@ -36,7 +33,6 @@ class EntryParametrsAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Curr, CurrAdmin)
-admin.site.register(Asat, AsatAdmin)
 admin.site.register(Point, PointAdmin)
 admin.site.register(Parameters, ParametersAdmin)
 admin.site.register(EntryParametrs, EntryParametrsAdmin)
