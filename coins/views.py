@@ -73,10 +73,11 @@ def fetch_coinmarketcap():
 
 def check_equations(last_date):
     for curr in Curr.objects.all():
+        # print(curr, ' CURRENCY')
         if Point.objects.filter(curr=curr).count() > 5:
             try:
                 parameters = Parameters.objects.get(curr=curr)
-            except:
+            except ObjectDoesNotExist:
                 parameters = Parameters.objects.filter(isdefault=True).first()
             # print(parameters, parameters.price_period)
             price_period = parameters.price_period
@@ -84,43 +85,48 @@ def check_equations(last_date):
             turnover24_period = parameters.turnover24_period
             turnover24_percentage = parameters.turnover24_percentage
             try:
-                last_point = Point.objects.get(date=last_date)
+                last_point = Point.objects.get(date=last_date, curr=curr)
             except:
-                last_point = Point.objects.all().order_by('-date').first()
+                last_point = Point.objects.filter(curr=curr).order_by('-date').first()
             # PRICE CHECK:
             desired_price_past_date = last_date - datetime.timedelta(0, price_period)
             # print('desired_price_past_date : ', desired_price_past_date)
             # print(Point.objects.filter(curr=curr).filter(date__gt=desired_price_past_date).order_by("date").first())
             closest_price = \
-            Point.objects.filter(curr=curr).filter(date__lt=desired_price_past_date).order_by("-date").first()
+            Point.objects.filter(curr=curr, date__lt=desired_price_past_date).order_by("-date").first()
             if not closest_price:
                 closest_price = \
-                Point.objects.filter(curr=curr).filter(date__gt=desired_price_past_date).order_by("date").first()
-            # print('closest_price: ', closest_price)
+                Point.objects.filter(curr=curr, date__gt=desired_price_past_date).order_by("date").first()
             actual_price_period = last_date - closest_price.date
-            # print('actual_price_period:  ', actual_price_period)
-            # print('last_date:  ', last_date)
             correction_price = actual_price_period.seconds / price_period #поправка на разницу между желаемым периодом и реальным
-            # print('correction_price:  ', correction_price)
+            #print('correction_price:  ', correction_price)
             price_change = (last_point.price_usd - closest_price.price_usd) / closest_price.price_usd
+            #print('last_point.price_usd: ', last_point.price_usd, ', closest_price.price_usd: ', closest_price.price_usd)
+            #print('price change persentage before correction:  ', price_change)
+            #print('for the period:  ', actual_price_period)
             if abs(price_change) > (price_percentage / correction_price):
-                reason = 'Price ALARM: ' + curr.symbol # TODO add some information
-                # telegram_bot(reason)
+                #print('price_change ', price_change, '> ', (price_percentage/correction_price), ' (/)')
+                reason = 'Price ALARM: curr-' + curr.symbol +\
+                    ', price_change: '+ str(round(price_change*100, 2)) + '% for ' + str(actual_price_period.seconds) + 'sec'
+                telegram_bot(reason)
 
             # TURNOVER24 CHECK:
             desired_turnover_past_date = last_date - datetime.timedelta(0, turnover24_period)
             closest_turnover = \
-            Point.objects.filter(curr=curr).filter(date__lt=desired_turnover_past_date).order_by("-date").first()
+            Point.objects.filter(curr=curr, date__lt=desired_turnover_past_date).order_by("-date").first()
             if not closest_turnover:
                 closest_turnover = \
-                Point.objects.filter(curr=curr).filter(date__gt=desired_turnover_past_date).order_by("date").first()
+                Point.objects.filter(curr=curr, date__gt=desired_turnover_past_date).order_by("date").first()
 
             actual_turnover_period = last_date - closest_turnover.date
             correction_turnover = actual_turnover_period.seconds / turnover24_period #поправка на разницу между желаемым периодом и реальным
             turnover_change = (last_point.volume24_usd - closest_turnover.volume24_usd) / closest_turnover.volume24_usd
+            #print('turnover_change: ', turnover_change, ' = ', last_point.volume24_usd, '-', closest_turnover.volume24_usd, ' /...')
             if abs(turnover_change) > (turnover24_percentage / correction_turnover):
-                reason = 'Turnover ALARM: ' + curr.symbol  # TODO add some information
-                # telegram_bot(reason)
+                reason = 'Turnover ALARM: ' + 'Turnover ALARM: curr-' + curr.symbol + \
+                ', turnover_change: ' + str(round(turnover_change*100, 2)) + '%, for ' + str(actual_turnover_period.seconds) + 'sec'
+                #print(reason)
+                telegram_bot(reason)
         else:
             reason = 'No information for : ' + curr.symbol
             #telegram_bot(reason)
@@ -148,11 +154,11 @@ def check_other(response_dict):
             if not Curr.objects.get(symbol=i):
                 reason = None
                 if percent_change_1h and i['percent_change_1h'] > percent_change_1h:
-                    reason = 'Currency ' + i + ' has added - percent_change_1h: ' + str(i['percent_change_1h'])
+                    reason = 'Currency ' + i + ' has been added - percent_change_1h: ' + str(i['percent_change_1h'])
                 elif percent_change_24h and i['percent_change_24h'] > percent_change_24h:
-                    reason = 'Currency ' + i + ' has added - percent_change_24h:' + str(i['percent_change_24h'])
+                    reason = 'Currency ' + i + ' has been - percent_change_24h:' + str(i['percent_change_24h'])
                 elif percent_change_7d and i['percent_change_7d'] > percent_change_7d:
-                    reason = 'Currency ' + i + ' has added - percent_change_7d:' + str(i['percent_change_7d'])
+                    reason = 'Currency ' + i + ' has been - percent_change_7d:' + str(i['percent_change_7d'])
                 if reason:
                     new = Curr(symbol=i['symbol'])
                     new.name = i['name']
