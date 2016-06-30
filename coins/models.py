@@ -33,6 +33,7 @@ class Parameters(models.Model):
     turnover24_period = models.IntegerField()
     turnover24_percentage = models.FloatField()
     curr = models.OneToOneField(Curr, null=True, blank=True)
+    alarm_hold_period = models.IntegerField()
     isdefault = models.BooleanField(default=False)
     # TODO only one can be without curr - default. add a check to the save method
 
@@ -48,3 +49,14 @@ class EntryParametrs(models.Model):
     percent_change_1h = models.FloatField(null=True, blank=True)
     percent_change_24h = models.FloatField(null=True, blank=True)
     percent_change_7d = models.FloatField(null=True, blank=True)
+    turnover_materiality = models.FloatField()
+
+
+class AlarmLog(models.Model):
+    date = models.DateTimeField(null=True, blank=True)
+    curr = models.ForeignKey(Curr)
+    ALARM_TYPE = (
+        ('1', u'Price'),
+        ('2', u'Turnover'),
+    )
+    alarm_type = models.IntegerField(choices=ALARM_TYPE)
