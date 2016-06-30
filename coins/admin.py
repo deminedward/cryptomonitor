@@ -31,8 +31,13 @@ class EntryParametrsAdmin(admin.ModelAdmin):
     pass
 
 
+class AlarmLogAdmin(admin.ModelAdmin):
+    pass
+
+
 
 admin.site.register(Curr, CurrAdmin)
 admin.site.register(Point, PointAdmin)
 admin.site.register(Parameters, ParametersAdmin)
 admin.site.register(EntryParametrs, EntryParametrsAdmin)
+admin.site.register(AlarmLog, AlarmLogAdmin)

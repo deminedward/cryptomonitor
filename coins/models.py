@@ -60,3 +60,7 @@ class AlarmLog(models.Model):
         ('2', u'Turnover'),
     )
     alarm_type = models.IntegerField(choices=ALARM_TYPE)
+
+    def __str__(self):
+        return "%s %s" % (self.curr.symbol,
+                          self.alarm_type)

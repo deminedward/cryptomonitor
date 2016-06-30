@@ -71,10 +71,10 @@ def fetch_coinmarketcap():
         return {}
 
 
-def check_onhold(curr, alarm_type, parametres):
-    last_alarm = AlarmLog.objects.filter(curr=curr, type=alarm_type).last()
+def check_onhold(curr, alarm_type, parameters):
+    last_alarm = AlarmLog.objects.filter(curr=curr, alarm_type=alarm_type).last()
     if last_alarm:
-        if (datetime.datetime.utcnow() - last_alarm.date()).seconds > parametres.alarm_hold_period:
+        if (datetime.datetime.utcnow() - last_alarm.date()).seconds > parameters.alarm_hold_period:
             is_active = True
         else:
             is_active = False
