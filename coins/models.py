@@ -50,6 +50,7 @@ class EntryParametrs(models.Model):
     percent_change_24h = models.FloatField(null=True, blank=True)
     percent_change_7d = models.FloatField(null=True, blank=True)
     turnover_materiality = models.FloatField()
+    turnover_to_add = models.FloatField()
 
 
 class AlarmLog(models.Model):

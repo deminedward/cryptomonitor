@@ -71,10 +71,10 @@ def fetch_coinmarketcap():
         return {}
 
 
-def check_onhold(curr, alarm_type, parameters):
+def check_onhold(curr, alarm_type, parameters, point_time):
     last_alarm = AlarmLog.objects.filter(curr=curr, alarm_type=alarm_type).last()
     if last_alarm:
-        if (datetime.datetime.utcnow() - last_alarm.date()).seconds > parameters.alarm_hold_period:
+        if (point_time - last_alarm.date).seconds > parameters.alarm_hold_period:
             is_active = True
         else:
             is_active = False
@@ -102,7 +102,7 @@ def check_equations(last_date):
             except:
                 last_point = Point.objects.filter(curr=curr).order_by('-date').first()
             # PRICE CHECK:
-            if check_onhold(curr=curr, alarm_type=1, parameters=parameters):
+            if check_onhold(curr=curr, alarm_type=1, parameters=parameters, point_time=last_date):
                 desired_price_past_date = last_date - datetime.timedelta(0, price_period)
                 # print('desired_price_past_date : ', desired_price_past_date)
                 # print(Point.objects.filter(curr=curr).filter(date__gt=desired_price_past_date).order_by("date").first())
@@ -116,13 +116,13 @@ def check_equations(last_date):
                 price_change = (last_point.price_usd - closest_price.price_usd) / closest_price.price_usd
                 if abs(price_change) > (price_percentage / correction_price):
                     reason = 'Price ALARM: curr-' + curr.symbol +\
-                        ', price_change: '+ str(round(price_change*100, 2)) + '% for ' + str(actual_price_period.seconds) + 'sec'
+                        ', price_change: ' + str(round(price_change*100, 2)) + '% for ' + str(actual_price_period.seconds) + 'sec'
                     telegram_bot(reason)
                     alarm_log = AlarmLog(date=last_date, curr=curr, alarm_type=1)
                     alarm_log.save()
 
             # TURNOVER24 CHECK:
-            if check_onhold(curr=curr, alarm_type=2, parameters=parameters):
+            if check_onhold(curr=curr, alarm_type=2, parameters=parameters, point_time=last_date):
                 desired_turnover_past_date = last_date - datetime.timedelta(0, turnover24_period)
                 closest_turnover = \
                 Point.objects.filter(curr=curr, date__lt=desired_turnover_past_date).order_by("-date").first()
@@ -150,35 +150,56 @@ def check_equations(last_date):
 def check_other(response_dict):
     try:
         entry_params = EntryParametrs.objects.all().first()
-        try:
-            percent_change_1h = entry_params.percent_change_1h
-        except:
-            percent_change_1h = None
-        try:
-            percent_change_24h = entry_params.percent_change_24h
-        except:
-            percent_change_24h = None
-        try:
-            percent_change_7d = entry_params.percent_change_7d
-        except:
-            percent_change_7d = None
-
         for i in response_dict:
-            if not Curr.objects.get(symbol=i):
+            i_data = response_dict[i]
+            if not Curr.objects.filter(symbol=i):
                 reason = None
-                if i['24h_volume_usd'] > entry_params.turnover_materiality:
-                    if percent_change_1h and i['percent_change_1h'] > percent_change_1h:
-                        reason = 'Currency ' + i + ' has been added - percent_change_1h: ' + str(i['percent_change_1h'])
-                    elif percent_change_24h and i['percent_change_24h'] > percent_change_24h:
-                        reason = 'Currency ' + i + ' has been - percent_change_24h:' + str(i['percent_change_24h'])
-                    elif percent_change_7d and i['percent_change_7d'] > percent_change_7d:
-                        reason = 'Currency ' + i + ' has been - percent_change_7d:' + str(i['percent_change_7d'])
-                    if reason:
-                        new = Curr(symbol=i['symbol'])
-                        new.name = i['name']
-                        new.source_rate = i['rank']
-                        new.save()
-                        telegram_bot(reason)
+
+                if i_data['24h_volume_usd'] and i_data['24h_volume_usd'] != 'None':
+                    turnover24 = float(i_data['24h_volume_usd'])
+                else:
+                    turnover24 = 0.0
+                if i_data['percent_change_1h'] and i_data['percent_change_1h'] != 'None':
+                    percent_change_1h = float(i_data['percent_change_1h'])
+                else:
+                    percent_change_1h = 0.0
+                if i_data['percent_change_24h'] and i_data['percent_change_24h'] != 'None':
+                    percent_change_24h = float(i_data['percent_change_24h'])
+                else:
+                    percent_change_24h = 0.0
+                if i_data['percent_change_7d'] and i_data['percent_change_7d'] != 'None':
+                    percent_change_7d = float(i_data['percent_change_7d'])
+                else:
+                    percent_change_7d = 0
+
+                if turnover24 >= entry_params.turnover_to_add:
+                    reason = 'Currency ' + i + ' has been added - 24h_volume_usd:' + str(turnover24)
+                    # print(i, 'IF111--24h_volume_usd >turnover_to_add', i_data['24h_volume_usd'])
+                elif turnover24 >= entry_params.turnover_materiality:
+                    # print(i, 'IF222--24h_volume_usd >turnover_materiality', i_data['24h_volume_usd'])
+                    if entry_params.percent_change_1h and percent_change_1h >= entry_params.percent_change_1h:
+                        reason = 'Currency ' + i + ' has been added - percent_change_1h: ' + str(percent_change_1h)
+                    elif entry_params.percent_change_24h and percent_change_24h >= entry_params.percent_change_24h:
+                        reason = 'Currency ' + i + ' has been added - percent_change_24h: ' + str(percent_change_24h)
+                    elif entry_params.percent_change_7d and percent_change_7d >= entry_params.percent_change_7d:
+                        reason = 'Currency ' + i + ' has been added - percent_change_7d: ' + str(percent_change_7d)
+                    else:
+                        pass
+
+                else:
+                    pass
+
+                if reason:
+                    new = Curr(symbol=i_data['symbol'])
+                    new.name = i_data['name']
+                    new.source_rate = i_data['rank']
+                    new.save()
+                    telegram_bot(reason)
+                else:
+                    pass
+            else:
+                pass
+
     except:
         pass
 
