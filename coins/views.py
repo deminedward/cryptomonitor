@@ -210,7 +210,7 @@ def fetch_n_save():
     point_time = datetime.datetime.utcnow()
     response_dict = fetch_coinmarketcap()
     if response_dict: #if it void - error message has already sent
-        for curr in Curr.objects.all().order_by('source_rate'): #[:3]: TODO change to all
+        for curr in Curr.objects.filter(is_active=True).order_by('source_rate'): #[:3]: TODO change to all
             try:
                 point = Point(curr=curr, date=point_time)
                 point.price_usd = float(response_dict[curr.symbol]['price_usd'])
