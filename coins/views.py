@@ -193,6 +193,7 @@ def check_other(response_dict):
                     new = Curr(symbol=i_data['symbol'])
                     new.name = i_data['name']
                     new.source_rate = i_data['rank']
+                    new.is_active = True
                     new.save()
                     telegram_bot(reason)
                 else:
@@ -241,6 +242,7 @@ def initial_curr(request, initial_rank):
                 new = Curr(symbol=response_dict[i]['symbol'])
                 new.name = response_dict[i]['name']
                 new.source_rate = int(response_dict[i]['rank'])
+                new.is_active = True
                 new.save()
                 added.append(new.symbol)
     return HttpResponse(added)
